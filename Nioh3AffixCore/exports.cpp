@@ -1,4 +1,3 @@
-#define NIOH3AFFIXCORE_EXPORTS
 #include "exports.h"
 #include "aob_scanner.h"
 #include "code_injector.h"
@@ -942,6 +941,9 @@ NIOH3AFFIXCORE_API bool __cdecl WriteEquipmentBasicsEx(
             }
         }
     }
+}
+}
+        
 
     g_lastError.clear();
     return true;
