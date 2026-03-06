@@ -1,0 +1,31 @@
+name: Build NIOH3AffixEditor
+
+on: [workflow_dispatch]  # 触发条件：每次 push 代码时运行
+
+jobs:
+  build:
+    runs-on: windows-latest  # 使用 Windows 虚拟机
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4  # 更新到最新版本
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'  # 针对 net9.0-windows，确保 SDK 支持
+
+    - name: Restore dependencies
+      run: dotnet restore Nioh3AffixEditor.csproj
+
+    - name: Build project
+      run: dotnet build Nioh3AffixEditor.csproj -c Test --no-restore
+
+    - name: Publish as self-contained exe
+      run: dotnet publish Nioh3AffixEditor.csproj -c Test -o publish-test -r win-x64 --self-contained true --no-build
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: NIOH3AffixEditor-exe
+        path: publish-test/  # 上传生成的 exe 和相关文件
