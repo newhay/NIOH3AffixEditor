@@ -1,6 +1,6 @@
 name: Build NIOH3AffixEditor
 
-on: [workflow_dispatch]  # 触发条件：每次 push 代码时运行
+on: [workflow_dispatch]  # 手动触发（可在 Actions 页运行），或改为 [push] 自动触发
 
 jobs:
   build:
@@ -8,12 +8,31 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4  # 更新到最新版本
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild (for Visual C++ tools)
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Install CMake
+      uses: lukka/get-cmake@v3.29.3
+
+    - name: Build C++ DLL
+      shell: pwsh  # 使用 PowerShell 以兼容 bat 脚本
+      run: |
+        cd Nioh3AffixCore
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --config Release
+        cd ../..
+        # 复制 DLL 到 .NET 输出目录（假设 Test 配置）
+        mkdir -p bin/Test/net9.0-windows/win-x64
+        copy Nioh3AffixCore/build/Release/Nioh3AffixCore.dll bin/Test/net9.0-windows/win-x64/
 
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.0.x'  # 针对 net9.0-windows，确保 SDK 支持
+        dotnet-version: '9.0.x'  # 支持 net9.0-windows
 
     - name: Restore dependencies
       run: dotnet restore Nioh3AffixEditor.csproj
@@ -28,4 +47,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: NIOH3AffixEditor-exe
-        path: publish-test/  # 上传生成的 exe 和相关文件
+        path: publish-test/  # 上传整个发布文件夹，包括 exe 和 DLL
